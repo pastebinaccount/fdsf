@@ -1,0 +1,75 @@
+-- Constants
+local OFFSET = 1100
+
+-- Variables
+local invisible = false
+local grips = {}
+local heldTool
+local gripChanged
+local handle
+local weld
+
+-- Function to toggle invisibility
+local function toggleInvisibility()
+    if invisible then
+        -- Disable invisibility
+        invisible = false
+        tool.Name = "Invisibility: Disabled"
+        
+        -- Restore character visibility and state
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, -OFFSET, 0)
+        game.Players.LocalPlayer.Character.Humanoid.HipHeight = 0
+        
+        -- Set character back as the camera subject
+        workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character.Humanoid
+        
+        -- Make character visible again
+        game.Players.LocalPlayer.Character:FindFirstChildOfClass("Model").PrimaryPart.Transparency = 0
+        
+    else
+        -- Enable invisibility
+        invisible = true
+        tool.Name = "Invisibility: Enabled"
+        
+        -- Create a transparent handle to prevent character model from being the camera subject
+        handle = Instance.new("Part", workspace)
+        handle.Name = "InvisibleHandle"
+        handle.Transparency = 1
+        handle.CanCollide = false
+        handle.Size = Vector3.new(2, 1, 1)
+        
+        -- Weld handle to player's HumanoidRootPart to keep it invisible
+        weld = Instance.new("Weld", handle)
+        weld.Part0 = handle
+        weld.Part1 = game.Players.LocalPlayer.Character.HumanoidRootPart
+        weld.C0 = CFrame.new(0, OFFSET - 1.5, 0)
+        
+        -- Adjust character's position and state for invisibility
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, OFFSET, 0)
+        game.Players.LocalPlayer.Character.Humanoid.HipHeight = OFFSET
+        
+        -- Set handle as the camera subject
+        workspace.CurrentCamera.CameraSubject = handle
+        
+        -- Make character model transparent
+        game.Players.LocalPlayer.Character:FindFirstChildOfClass("Model").PrimaryPart.Transparency = 1
+    end
+end
+
+-- Tool setup
+local tool = Instance.new("Tool", game.Players.LocalPlayer.Backpack)
+tool.Name = "Invisibility"
+tool.RequiresHandle = false
+tool.CanBeDropped = false
+
+-- Equipped event handler
+tool.Equipped:Connect(function()
+    toggleInvisibility()
+end)
+
+-- Unequipped event handler (cleanup)
+tool.Unequipped:Connect(function()
+    if invisible then
+        toggleInvisibility()
+    end
+end)
